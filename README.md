@@ -26,6 +26,8 @@ cd ~/MaterialSearch
 
 2. 启动程序：
 
+./start.sh
+
 3. 打开浏览器访问：`http://localhost:8000`
 
 ## 配置说明
@@ -40,3 +42,5 @@ DEVICE=cpu
 ## 问题反馈
 
 如果在安装过程中遇到任何问题，请在 [Issues](https://github.com/free2518/material-search-installer/issues) 页面提交问题。
+
+
