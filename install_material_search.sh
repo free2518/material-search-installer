@@ -96,11 +96,21 @@ select_model() {
         *) model="OFA-Sys/chinese-clip-vit-base-patch16";;
     esac
 
-    # 更新配置文件
-    echo "ASSETS_PATH=\$HOME/Pictures,\$HOME/Movies" > .env
-    echo "DEVICE=cpu" >> .env
+    # 读取当前的配置
+    if [ -f .env ]; then
+        current_path=\$(grep ASSETS_PATH .env | cut -d= -f2-)
+        current_device=\$(grep DEVICE .env | cut -d= -f2-)
+    else
+        current_path="\$HOME/Pictures,\$HOME/Movies"
+        current_device="cpu"
+    fi
+
+    # 更新配置文件，保留原有设置
+    echo "ASSETS_PATH=\$current_path" > .env
+    echo "DEVICE=\$current_device" >> .env
     echo "MODEL_NAME=\$model" >> .env
-    echo -e "\${GREEN}已切换到模型: \$model\${NC}"
+    echo -e "\${GREEN}已切换到模型: \$model${NC}"
+    echo -e "\${GREEN}当前扫描路径: \$current_path${NC}"
 }
 
 select_model
@@ -135,6 +145,9 @@ read -p "是否切换模型? (y/n): " switch_model
 if [ "\$switch_model" = "y" ]; then
     ./models.sh
 fi
+
+# 删除旧的数据库文件，强制重新扫描
+rm -f instance/assets.db
 
 python main.py
 EOL
