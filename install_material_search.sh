@@ -49,6 +49,11 @@ echo "正在创建虚拟环境..."
 python3 -m venv venv || handle_error "虚拟环境创建失败"
 source venv/bin/activate || handle_error "虚拟环境激活失败"
 
+# 安装 Rust 和 Cargo
+echo "正在安装 Rust..."
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y || handle_error "Rust 安装失败"
+source "$HOME/.cargo/env"
+
 # 在安装依赖之前添加这些行
 echo "正在配置 Hugging Face..."
 export TRANSFORMERS_OFFLINE=0
@@ -58,7 +63,7 @@ export HF_HUB_ENABLE_HF_TRANSFER=1
 # 安装依赖
 echo "正在安装 Python 依赖..."
 pip install --upgrade pip || handle_error "pip 更新失败"
-pip install huggingface_hub || handle_error "Hugging Face Hub 安装失败"
+pip install huggingface_hub hf_transfer || handle_error "Hugging Face Hub 安装失败"
 
 # 先安装 PyTorch
 echo "正在安装 PyTorch..."
@@ -121,6 +126,9 @@ source venv/bin/activate
 export TRANSFORMERS_OFFLINE=0
 export HF_ENDPOINT=https://huggingface.co
 export HF_HUB_ENABLE_HF_TRANSFER=1
+
+# 设置 Rust 环境
+source "\$HOME/.cargo/env"
 
 # 询问是否切换模型
 read -p "是否切换模型? (y/n): " switch_model
