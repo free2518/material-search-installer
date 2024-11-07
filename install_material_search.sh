@@ -49,9 +49,16 @@ echo "正在创建虚拟环境..."
 python3 -m venv venv || handle_error "虚拟环境创建失败"
 source venv/bin/activate || handle_error "虚拟环境激活失败"
 
+# 在安装依赖之前添加这些行
+echo "正在配置 Hugging Face..."
+export TRANSFORMERS_OFFLINE=0
+export HF_ENDPOINT=https://huggingface.co
+export HF_HUB_ENABLE_HF_TRANSFER=1
+
 # 安装依赖
 echo "正在安装 Python 依赖..."
 pip install --upgrade pip || handle_error "pip 更新失败"
+pip install huggingface_hub || handle_error "Hugging Face Hub 安装失败"
 
 # 先安装 PyTorch
 echo "正在安装 PyTorch..."
@@ -85,7 +92,9 @@ select_model() {
     esac
 
     # 更新配置文件
-    sed -i '' "s/MODEL_NAME=.*/MODEL_NAME=\$model/" .env
+    echo "ASSETS_PATH=\$HOME/Pictures,\$HOME/Movies" > .env
+    echo "DEVICE=cpu" >> .env
+    echo "MODEL_NAME=\$model" >> .env
     echo -e "\${GREEN}已切换到模型: \$model\${NC}"
 }
 
@@ -107,6 +116,11 @@ cat > start.sh << EOL
 #!/bin/bash
 cd \$(dirname \$0)
 source venv/bin/activate
+
+# 设置 Hugging Face 环境变量
+export TRANSFORMERS_OFFLINE=0
+export HF_ENDPOINT=https://huggingface.co
+export HF_HUB_ENABLE_HF_TRANSFER=1
 
 # 询问是否切换模型
 read -p "是否切换模型? (y/n): " switch_model
