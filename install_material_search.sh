@@ -60,18 +60,60 @@ pip install --pre torch torchvision torchaudio --index-url https://download.pyto
 # 然后安装其他依赖
 pip install -U -r requirements.txt || handle_error "Python 依赖安装失败"
 
+# 创建模型配置文件
+echo "正在创建模型配置文件..."
+cat > models.sh << EOL
+#!/bin/bash
+
+# 设置颜色输出
+GREEN='\033[0;32m'
+NC='\033[0m'
+
+# 选择模型
+select_model() {
+    echo "请选择要使用的模型："
+    echo "1) chinese-clip-vit-base-patch16 (默认，平衡型，753MB)"
+    echo "2) chinese-clip-vit-large-patch14 (高性能，3GB)"
+    echo "3) chinese-clip-rn50 (快速，体积小)"
+    read -p "请输入选择 (1-3): " choice
+
+    case \$choice in
+        1) model="OFA-Sys/chinese-clip-vit-base-patch16";;
+        2) model="OFA-Sys/chinese-clip-vit-large-patch14";;
+        3) model="OFA-Sys/chinese-clip-rn50";;
+        *) model="OFA-Sys/chinese-clip-vit-base-patch16";;
+    esac
+
+    # 更新配置文件
+    sed -i '' "s/MODEL_NAME=.*/MODEL_NAME=\$model/" .env
+    echo -e "\${GREEN}已切换到模型: \$model\${NC}"
+}
+
+select_model
+EOL
+
+chmod +x models.sh
+
 # 创建配置文件
 echo "正在创建配置文件..."
 cat > .env << EOL
 ASSETS_PATH=$HOME/Pictures,$HOME/Movies
 DEVICE=cpu
+MODEL_NAME=OFA-Sys/chinese-clip-vit-base-patch16
 EOL
 
-# 创建启动脚本
+# 修改启动脚本
 cat > start.sh << EOL
 #!/bin/bash
 cd \$(dirname \$0)
 source venv/bin/activate
+
+# 询问是否切换模型
+read -p "是否切换模型? (y/n): " switch_model
+if [ "\$switch_model" = "y" ]; then
+    ./models.sh
+fi
+
 python main.py
 EOL
 
@@ -82,4 +124,4 @@ echo -e "${GREEN}安装完成！${NC}"
 echo -e "${GREEN}你可以通过以下方式启动程序：${NC}"
 echo "1. cd ~/MaterialSearch"
 echo "2. ./start.sh"
-echo -e "${GREEN}启动后访问 http://localhost:8000 即可使用${NC}"
+echo -e "${GREEN}启动后访问 http://localhost:8085 即可使用${NC}"
