@@ -52,6 +52,12 @@ source venv/bin/activate || handle_error "虚拟环境激活失败"
 # 安装依赖
 echo "正在安装 Python 依赖..."
 pip install --upgrade pip || handle_error "pip 更新失败"
+
+# 先安装 PyTorch
+echo "正在安装 PyTorch..."
+pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cpu || handle_error "PyTorch 安装失败"
+
+# 然后安装其他依赖
 pip install -U -r requirements.txt || handle_error "Python 依赖安装失败"
 
 # 创建配置文件
