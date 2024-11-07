@@ -142,8 +142,30 @@ EOL
 # 设置启动脚本权限
 chmod +x start.sh || handle_error "无法设置启动脚本权限"
 
+# 创建桌面快捷方式
+echo "正在创建桌面快捷方式..."
+DESKTOP_PATH="$HOME/Desktop"
+if [ -d "$DESKTOP_PATH" ]; then
+    cat > "$DESKTOP_PATH/MaterialSearch.command" << EOL
+#!/bin/bash
+cd ~/MaterialSearch
+./start.sh
+EOL
+    if ! chmod +x "$DESKTOP_PATH/MaterialSearch.command"; then
+        echo -e "${RED}警告: 无法设置桌面快捷方式权限${NC}"
+        echo "你可以手动运行以下命令设置权限："
+        echo "chmod +x ~/Desktop/MaterialSearch.command"
+    else
+        echo -e "${GREEN}✓ 桌面快捷方式创建成功${NC}"
+    fi
+else
+    echo -e "${RED}警告: 未找到桌面目录，跳过创建快捷方式${NC}"
+fi
+
 echo -e "${GREEN}安装完成！${NC}"
 echo -e "${GREEN}你可以通过以下方式启动程序：${NC}"
-echo "1. cd ~/MaterialSearch"
-echo "2. ./start.sh"
+echo "1. 双击桌面上的 MaterialSearch.command (如果创建成功)"
+echo "2. 或者在终端中运行:"
+echo "   cd ~/MaterialSearch"
+echo "   ./start.sh"
 echo -e "${GREEN}启动后访问 http://localhost:8085 即可使用${NC}"
