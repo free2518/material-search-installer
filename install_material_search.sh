@@ -44,6 +44,11 @@ else
     git clone https://github.com/IuvenisSapiens/MaterialSearch.git . || handle_error "项目克隆失败"
 fi
 
+# 添加增量扫描功能
+echo "正在应用增量扫描补丁..."
+cp patches/config.py . || handle_error "配置文件复制失败"
+cp patches/scan.py . || handle_error "扫描文件复制失败"
+
 # 创建虚拟环境
 echo "正在创建虚拟环境..."
 python3 -m venv venv || handle_error "虚拟环境创建失败"
@@ -100,6 +105,10 @@ select_model() {
     if [ -f .env ]; then
         current_path=\$(grep ASSETS_PATH .env | cut -d= -f2-)
         current_device=\$(grep DEVICE .env | cut -d= -f2-)
+        # 如果存在 NEW_SCAN_PATH，保留它
+        if grep -q "NEW_SCAN_PATH" .env; then
+            new_scan_path=\$(grep NEW_SCAN_PATH .env | cut -d= -f2-)
+        fi
     else
         current_path="\$HOME/Pictures,\$HOME/Movies"
         current_device="cpu"
@@ -109,6 +118,12 @@ select_model() {
     echo "ASSETS_PATH=\$current_path" > .env
     echo "DEVICE=\$current_device" >> .env
     echo "MODEL_NAME=\$model" >> .env
+    if [ ! -z "\$new_scan_path" ]; then
+        echo "NEW_SCAN_PATH=\$new_scan_path" >> .env
+    else
+        echo "# 如果需要增量扫描，取消下面这行的注释并修改路径" >> .env
+        echo "#NEW_SCAN_PATH=/path/to/new/directory" >> .env
+    fi
     echo -e "\${GREEN}已切换到模型: \$model${NC}"
     echo -e "\${GREEN}当前扫描路径: \$current_path${NC}"
 }
@@ -124,6 +139,8 @@ cat > .env << EOL
 ASSETS_PATH=$HOME/Pictures,$HOME/Movies
 DEVICE=cpu
 MODEL_NAME=OFA-Sys/chinese-clip-vit-base-patch16
+# 如果需要增量扫描，取消下面这行的注释并修改路径
+#NEW_SCAN_PATH=/path/to/new/directory
 EOL
 
 # 修改启动脚本
@@ -146,11 +163,7 @@ if [ "\$switch_model" = "y" ]; then
     ./models.sh
 fi
 
-# 询问是否删除数据库
-read -p "是否删除数据库并重新扫描? (y/n): " delete_db
-if [ "\$delete_db" = "y" ]; then
-    rm -f instance/assets.db
-fi
+
 
 python main.py
 EOL
@@ -185,3 +198,9 @@ echo "2. 或者在终端中运行:"
 echo "   cd ~/MaterialSearch"
 echo "   ./start.sh"
 echo -e "${GREEN}启动后访问 http://localhost:8085 即可使用${NC}"
+echo -e "\n${GREEN}增量扫描功能：${NC}"
+echo "如果你只想扫描新添加的目录："
+echo "1. 编辑 .env 文件"
+echo "2. 添加或取消注释 NEW_SCAN_PATH=/path/to/new/directory"
+echo "3. 将路径改为你要扫描的新目录"
+echo "4. 扫描完成后可以删除或注释掉这行"
