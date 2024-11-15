@@ -146,8 +146,11 @@ if [ "\$switch_model" = "y" ]; then
     ./models.sh
 fi
 
-# 删除旧的数据库文件，强制重新扫描
-rm -f instance/assets.db
+# 询问是否删除数据库
+read -p "是否删除数据库并重新扫描? (y/n): " delete_db
+if [ "\$delete_db" = "y" ]; then
+    rm -f instance/assets.db
+fi
 
 python main.py
 EOL
